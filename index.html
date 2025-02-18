@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าหลัก</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Chakra Petch', sans-serif;
+            background-color: #f3f3f3;
+            color: #333;
+            text-align: center;
+            padding: 0;
+        }
+
+        header {
+    background-color: #ffffff;
+    color: #333;
+    padding: 18px;
+    margin-bottom: 40px;
+    position: relative;
+    width: 100%;
+    animation: waveShadow 3s infinite ease-in-out alternate;
+}
+
+
+        header h1 {
+            font-size: 1.7rem;
+            color: #747277;
+        }
+
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .card {
+            width: 300px;
+            background: white;
+            border-radius: 20px;
+            animation: waveShadow 3s infinite ease-in-out alternate;
+            overflow: hidden;
+            text-align: left;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card a {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* กรอบรอบรูปภาพเมื่อ Hover */
+        .card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .card img:hover {
+            transform: scale(1.05); /* Keep the zoom effect */
+        }
+
+        .card-content {
+            padding: 15px;
+        }
+
+        .card-content h2 {
+            font-size: 1.1rem;
+            color: #4a6bda;
+            margin-bottom: 20px;
+        }
+
+        .card-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .card-content ul li {
+            margin-bottom: 5px;
+        }
+
+        /* แถบด้านล่าง */
+        .footer {
+            background-color: #17083e;
+            color: #fff;
+            padding: 7px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .marquee-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            white-space: nowrap;
+            animation: scroll-text 20s linear infinite;
+        }
+
+        .marquee-text {
+            font-size: 1.1rem;
+            margin-right: 50px;
+        }
+
+        /* การเคลื่อนไหวข้อความ */
+        @keyframes scroll-text {
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+@keyframes waveShadow {
+    0% {
+        box-shadow: 0 5px 15px rgba(0, 102, 255, 0.5); /* ฟ้าเข้ม */
+    }
+    25% {
+        box-shadow: 5px 10px 20px rgba(0, 153, 255, 0.5); /* ฟ้าสดใส */
+    }
+    50% {
+        box-shadow: -5px 15px 25px rgba(0, 204, 255, 0.5); /* ฟ้าน้ำทะเล */
+    }
+    75% {
+        box-shadow: 5px 10px 20px rgba(0, 102, 204, 0.5); /* น้ำเงินอ่อน */
+    }
+    100% {
+        box-shadow: 0 5px 15px rgba(0, 51, 153, 0.5); /* น้ำเงินเข้ม */
+    }
+}
+
+
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Automatic Curtain</h1>
+    </header>
+
+    <div class="main-container">
+        <div class="card">
+            <a href="control.html">
+                <img src="images/pah.jpg" alt="ภาพโรงเรือน">
+            </a>
+            <div class="card-content">
+                <a href="control.html">
+                <h2>การควบคุมการเปิด-ปิดม่านอัตโนมัติ</h2>
+                </a>
+                <ul>
+                    <li>- เปิด   </li>
+                    <li>- ปิด</li>
+                    <li>- ออโต้ โหมด</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- แถบด้านล่าง -->
+    <div class="footer">
+        <div class="marquee-container">
+            <span class="marquee-text">
+                <img src="https://scontent.fbkk12-3.fna.fbcdn.net/v/t39.30808-6/308665862_512080337590425_7515461354658063805_n.png?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=-vi1WZcMx-AQ7kNvgHQKBnP&_nc_oc=AdhloOKGwj4y5kucuY5L66cb4Gl5k-3515qz92mtji1jCBe73BujzQLKUCODUvNbXCI&_nc_zt=23&_nc_ht=scontent.fbkk12-3.fna&_nc_gid=Ay5-hMWAyAE8Xdjc7mcxQQo&oh=00_AYAHkdQW9kbgHxIRFV1bs3VCVuUf5eghZdUjWLvzoJy1Cg&oe=67A02FBA" alt="" style="width: 30px; height: 30px; vertical-align: middle; mimargin-right: 0px;">
+                ไม่รู้ว่าทำไม และฉันไม่เคยเข้าใจ
+                ว่าฉันไม่ดีตรงไหน ทำไมเธอถึงเลือกเขา
+                ฝันที่วาดเอาไว้เรื่องของเรา เธอไม่เอา
+                ก็คงต้องโยนมันทิ้งไป
+                <img src="https://scontent.fbkk12-3.fna.fbcdn.net/v/t39.30808-6/308665862_512080337590425_7515461354658063805_n.png?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=-vi1WZcMx-AQ7kNvgHQKBnP&_nc_oc=AdhloOKGwj4y5kucuY5L66cb4Gl5k-3515qz92mtji1jCBe73BujzQLKUCODUvNbXCI&_nc_zt=23&_nc_ht=scontent.fbkk12-3.fna&_nc_gid=Ay5-hMWAyAE8Xdjc7mcxQQo&oh=00_AYAHkdQW9kbgHxIRFV1bs3VCVuUf5eghZdUjWLvzoJy1Cg&oe=67A02FBA" alt="" style="width: 30px; height: 30px; vertical-align: middle; mimargin-right: 0px;">
+            </span>
+        </div>
+    </div>
+
+</body>
+
+</html>
