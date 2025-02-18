@@ -1,0 +1,241 @@
+#include <ESP8266WiFi.h>
+#include <ArduinoHttpClient.h>
+
+
+#define Relay1 D4  // Active Low
+#define Relay2 D5  // Active Low
+#define LDR_PIN A0
+#define LED_PIN D3
+
+
+// ตัวแปรสถานะ
+bool autoMode = false;
+bool isRelay1Running = false;
+bool isRelay2Running = false;
+bool systemStarted = false;
+unsigned long relay1StartTime = 0;
+unsigned long relay2StartTime = 0;
+unsigned long lastLDRSendTime = 0;
+const unsigned long LDR_SEND_INTERVAL = 1000;
+const unsigned long RELAY_DELAY = 5000; // เวลาทำงานของรีเลย์
+
+int ldrValue = 0;
+bool wasBright = false;
+int relayQueue = 0;
+
+const char *ssid = "meu";
+const char *password = "22222222";
+const char *serverAddress = "172.20.10.3";
+const int serverPort = 80;
+
+WiFiClient wifiClient;
+HttpClient httpClient = HttpClient(wifiClient, serverAddress, serverPort);
+
+String lastDoorState = "";
+int lastLdrValue = -1;
+int ldrThreshold = 600;
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(Relay1, OUTPUT);
+  pinMode(Relay2, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+  digitalWrite(Relay1, HIGH);
+  digitalWrite(Relay2, HIGH);
+  digitalWrite(LED_PIN, LOW);
+
+  lastDoorState = "closed";
+
+  connectWiFi();
+  Serial.println("🔄 System Initialized - Waiting for Commands...");
+}
+
+void loop() {
+  ensureWiFiConnected();
+  fetchServerStatus();
+  if (systemStarted && autoMode) {
+    handleAutoMode();
+  }
+  handleRelayTimers();
+  sendLDRValue();
+  delay(50);
+
+}
+
+void connectWiFi() {
+  Serial.print("Connecting to WiFi...");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("\n✅ WiFi connected!");
+}
+
+void ensureWiFiConnected() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("❌ WiFi disconnected. Reconnecting...");
+    connectWiFi();
+  }
+}
+
+void deactivateAllRelays() {
+  deactivateRelay(Relay1);
+  deactivateRelay(Relay2);
+}
+
+void fetchServerStatus() {
+  httpClient.get("/phaman/control.php?action=status");
+  int statusCode = httpClient.responseStatusCode();
+  String response = httpClient.responseBody();
+
+  if (statusCode == 200) {
+    Serial.println("📡 การตอบกลับจากเซิร์ฟเวอร์: " + response);
+    bool isDoorOpen = response.indexOf("\"door\":\"open\"") > 0;
+    bool isDoorClosed = response.indexOf("\"door\":\"closed\"") > 0;
+    bool newAutoMode = (response.indexOf("\"autoMode\":\"on\"") > 0);
+
+    // ดึงค่า ldrThreshold จากการตอบกลับ
+    int startIndex = response.indexOf("\"ldrThreshold\":") + 15;
+    int endIndex = response.indexOf(",", startIndex);
+    if (startIndex > 0 && endIndex > startIndex) {
+      ldrThreshold = response.substring(startIndex, endIndex).toInt();
+    }
+
+    if (!systemStarted) {
+      systemStarted = true;
+      Serial.println("🟢 ระบบเริ่มต้นทำงานแล้ว - พร้อมรับคำสั่ง!");
+    }
+
+    if (systemStarted) {
+      if (isDoorOpen && lastDoorState != "open") {
+        Serial.println("🚪 [เซิร์ฟเวอร์] ประตูเปิด → เปิดใช้งานรีเลย์ 1");
+        if (!isRelay1Running) activateRelay(Relay1);
+        lastDoorState = "open";
+      } else if (isDoorClosed && lastDoorState != "closed") {
+        Serial.println("🚪 [เซิร์ฟเวอร์] ประตูปิด → เปิดใช้งานรีเลย์ 2");
+        if (!isRelay2Running) activateRelay(Relay2);
+        lastDoorState = "closed";
+      }
+      if (newAutoMode != autoMode) {
+        autoMode = newAutoMode;
+        deactivateAllRelays();
+        Serial.println(autoMode ? "✅ โหมดอัตโนมัติเปิดใช้งานแล้ว" : "❌ โหมดอัตโนมัติปิดใช้งานแล้ว");
+      }
+    }
+  } else {
+    Serial.println("❌ ไม่สามารถเรียกสถานะจากเซิร์ฟเวอร์ได้. รหัสสถานะ: " + String(statusCode));
+  }
+}
+
+
+void handleAutoMode() {
+  if (!autoMode) return; // ทำงานเฉพาะโหมด Auto Mode
+
+  int ldrRaw = analogRead(LDR_PIN);
+  int ldr = map(ldrRaw, 0, 1023, 0, 1000);
+  ldrValue = ldr;
+
+  Serial.print("🌞 LDR Value: ");
+  Serial.println(ldr);
+
+  if (ldr > ldrThreshold + 75 && !isRelay1Running && !wasBright) {
+    Serial.println("🌞 Bright light detected → Activating Relay 1");
+    activateRelay(Relay1);
+    wasBright = true;  // Set the state to bright
+  } else if (ldr < ldrThreshold - 75 && !isRelay2Running && wasBright) {
+    Serial.println("🌑 Dim light detected → Activating Relay 2");
+    activateRelay(Relay2);
+    wasBright = false;  // Set the state to dim
+  }
+}
+
+
+void handleRelayTimers() {
+  unsigned long currentMillis = millis();
+  if (isRelay1Running && (currentMillis - relay1StartTime >= RELAY_DELAY)) {
+    Serial.println("⏳ Relay 1 OFF (Timeout)");
+    deactivateRelay(Relay1);
+  }
+  if (isRelay2Running && (currentMillis - relay2StartTime >= RELAY_DELAY)) {
+    Serial.println("⏳ Relay 2 OFF (Timeout)");
+    deactivateRelay(Relay2);
+  }
+}
+
+
+void activateRelay(int relayPin) {
+  if (isRelay1Running || isRelay2Running) {
+    if (relayQueue == 0) {
+      relayQueue = (relayPin == Relay1) ? 1 : 2;
+      Serial.println("🔄 Relay " + String(relayQueue) + " is queued.");
+    }
+    return;
+  }
+  
+  // Only activate if relay is not already on
+  if (digitalRead(relayPin) == LOW) {
+    Serial.println("⚠️ Relay already ON: " + String(relayPin));
+    return;
+  }
+
+  Serial.print("⚡ Activating Relay: ");
+  Serial.println(relayPin == Relay1 ? "Relay1" : "Relay2");
+
+  digitalWrite(relayPin, LOW);
+  if (relayPin == Relay1) {
+    isRelay1Running = true;
+    relay1StartTime = millis();
+  } else {
+    isRelay2Running = true;
+    relay2StartTime = millis();
+  }
+  digitalWrite(LED_PIN, HIGH);
+}
+
+void deactivateRelay(int relayPin) {
+  digitalWrite(relayPin, HIGH);
+  if (relayPin == Relay1) {
+    isRelay1Running = false;
+  } else {
+    isRelay2Running = false;
+  }
+  digitalWrite(LED_PIN, LOW);
+  if (relayQueue != 0) {
+    int nextRelay = (relayQueue == 1) ? Relay1 : Relay2;
+    relayQueue = 0;
+    activateRelay(nextRelay);
+  }
+}
+
+void sendLDRValue() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastLDRSendTime >= LDR_SEND_INTERVAL) {
+    lastLDRSendTime = currentMillis;
+    int ldrRaw = analogRead(LDR_PIN);
+    int ldr = map(ldrRaw, 0, 1023, 0, 1000);
+
+    if (ldr == lastLdrValue) {
+      Serial.println("⚠️ No change in LDR Value - Skipping Update");
+      return;
+    }
+
+    Serial.print("🌞 Sending LDR Value: ");
+    Serial.println(ldr);
+
+    String url = "/phaman/control.php?action=set_light&value=" + String(ldr);
+    httpClient.get(url);
+    int statusCode = httpClient.responseStatusCode();
+    String response = httpClient.responseBody();
+
+    if (statusCode == 200) {
+      Serial.println("📡 Server Response: " + response);
+      lastLdrValue = ldr;
+    } else {ir
+      Serial.println("❌ Failed to send LDR value. Status Code: " + String(statusCode));
+    }
+  }
+}
+

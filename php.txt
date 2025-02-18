@@ -1,0 +1,27 @@
+<?php
+
+// ฟังก์ชันสำหรับดึงข้อมูลจาก Firebase
+function getLightIntensityFromFirebase() {
+    $firebaseUrl = 'https://your-firebase-database.firebaseio.com/lightIntensity.json';
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $firebaseUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return json_decode($response, true);
+}
+
+// อ่านค่าความเข้มแสงจาก Firebase
+$lightIntensity = getLightIntensityFromFirebase();
+
+// กำหนด threshold สำหรับการเปิด/ปิดรีเลย์
+$threshold = 500;
+
+// ควบคุมรีเลย์ตามค่าความเข้มแสง
+if ($lightIntensity > $threshold) {
+    shell_exec("gpio write 0 0"); // เปิดรีเลย์
+} else {
+    shell_exec("gpio write 0 1"); // ปิดรีเลย์
+}
+
+?>

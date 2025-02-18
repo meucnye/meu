@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        
+
+        <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+        <script src="/js/firebase-control.js"></script>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ระบบควบคุม</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&display=swap');
+            
+            
+
+            /* Global Styles */
+            body {
+                font-family: 'Chakra Petch', sans-serif;
+                background-color: #f9f9f9;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Header Styles */
+            header {
+                background-color: #ffffff;
+                color: #333;
+                padding: 18px 0;
+                text-align: center;
+                font-size: 1.7rem;
+                font-weight: bold;
+                box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+                margin-bottom: 50px;
+                position: relative;
+                animation: waveShadow 3s infinite ease-in-out alternate;
+                
+            }
+
+            .btn-home {
+                position: absolute;
+                top: 15px;
+                right: 20px;
+                padding: 10px 20px;
+                background-color: #cfc7e1;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 0.9rem;
+                cursor: pointer;
+                transition: transform 0.2s ease, background-color 0.3s;
+                box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
+            }
+
+            .btn-home:hover {
+                background-color: #b6db2e;
+                transform: scale(1.2);
+            }
+
+            /* Container and Control Section */
+            .container {
+                padding: 20px;
+            }
+
+            .control-section {
+                display: flex;
+                justify-content: center;
+                gap: 40px;
+                flex-wrap: wrap;
+                margin-bottom: 30px;
+            }
+
+            /* Card Styles */
+            .card {
+                background-color: #fff;
+                border-radius: 20px;
+                animation: waveShadow 3s infinite ease-in-out alternate;
+                width: 250px;
+                padding: 20px;
+                text-align: center;
+                border: 3px solid #ddd;
+            }
+
+            .card h2 {
+                font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(90deg, #7446c8, #1d043a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+            }
+
+            .card img {
+                width: 100px;
+                height: auto;
+                margin-bottom: 0px;
+                box-shadow: none;
+                background-color: #fff;
+                border-radius: 50%;
+            }
+
+            .card button {
+    width: 60%;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    outline: none;
+}
+
+            .btn-open:hover {
+    background: linear-gradient(90deg, #0056b3, #008cff);
+    transform: scale(1.1);
+    box-shadow: 0 6px 15px rgba(0, 123, 255, 0.6);
+}
+
+            .btn-open {
+    background: linear-gradient(90deg, #007bff, #00c3ff);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
+}
+
+.btn-close {
+    background: linear-gradient(90deg, #ff4b2b, #ff416c);
+    box-shadow: 0 4px 10px rgba(255, 75, 43, 0.4);
+}
+.btn-close:hover {
+    background: linear-gradient(90deg, #b3210d, #d83f5b);
+    transform: scale(1.1);
+    box-shadow: 0 6px 15px rgba(255, 75, 43, 0.6);
+}
+
+            /* Switch Styles */
+            .switch {
+    position: relative;
+    display: inline-block;
+    width: 130px;
+    height: 50px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, #ccc, #bbb);
+    transition: 0.4s;
+    border-radius: 50px;
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 40px;
+    width: 40px;
+    left: 5px;
+    bottom: 5px;
+    background: linear-gradient(145deg, #ffffff, #dddddd);
+    transition: 0.4s;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+input:checked + .slider {
+    background: linear-gradient(90deg, #ff8a00, #ffc107);
+    box-shadow: 0 0 15px rgba(255, 200, 50, 0.6);
+}
+input:checked + .slider:before {
+    transform: translateX(70px);
+    background: linear-gradient(145deg, #fff7e6, #ffdd8d);
+    box-shadow: 0 4px 6px rgba(255, 200, 50, 0.5);
+}
+
+/* เพิ่มเอฟเฟกต์เปล่งแสงตอนเปิด */
+input:checked + .slider::after {
+    content: "ON";
+    color: white;
+    position: absolute;
+    right: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    font-size: 1rem;
+}
+.slider::after {
+    content: "OFF";
+    color: white;
+    position: absolute;
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    font-size: 1rem;
+}
+            .toast {
+        position: fixed;
+        bottom: 45px;
+        right: 20px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 1rem;
+        display: none;
+        z-index: 1000;
+        transition: opacity 1s ease-in-out;
+    }
+    .card button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: 0.4s;
+}
+.card button:hover::before {
+    left: 100%;
+}
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 40px;
+                width: 40px;
+                left: 4px;
+                bottom: 4px;
+                background: linear-gradient(145deg, #ffffff, #dddddd);
+                transition: 0.4s;
+                border-radius: 50%;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }
+
+            input:checked + .slider {
+                background: linear-gradient(90deg, #ff8a00, #ffc107);
+                box-shadow: 0 0 10px rgba(255, 200, 50, 0.7);
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(83px);
+                background: linear-gradient(145deg, #fff7e6, #ffdd8d);
+                box-shadow: 0 4px 4px rgba(255, 200, 50, 0.4);
+            }
+
+            /* Footer Styles */
+            .footer {
+                background-color: #17083e;
+                color: #fff;
+                padding: 7px 0;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                text-align: center;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .marquee-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                white-space: nowrap;
+                animation: scroll-text 20s linear infinite;
+            }
+
+            .marquee-text {
+                font-size: 1.1rem;
+                margin-right: 50px;
+                text-shadow: 1px 1px 5px rgba(255, 255, 255, 0.7);
+            }
+.control-container {
+    display: flex;
+    justify-content: center; /* จัดให้อยู่กึ่งกลาง */
+    align-items: center;
+    gap: 20px; /* ระยะห่างระหว่างปุ่ม */
+}
+            @keyframes scroll-text {
+                0% {
+                    transform: translateX(100%);
+                }
+
+                100% {
+                    transform: translateX(-100%);
+                }
+            }
+            @keyframes waveShadow {
+    0% {
+        box-shadow: 0 5px 15px rgba(0, 102, 255, 0.5); /* ฟ้าเข้ม */
+    }
+    25% {
+        box-shadow: 5px 10px 20px rgba(0, 153, 255, 0.5); /* ฟ้าสดใส */
+    }
+    50% {
+        box-shadow: -5px 15px 25px rgba(0, 204, 255, 0.5); /* ฟ้าน้ำทะเล */
+    }
+    75% {
+        box-shadow: 5px 10px 20px rgba(0, 102, 204, 0.5); /* น้ำเงินอ่อน */
+    }
+    100% {
+        box-shadow: 0 5px 15px rgba(0, 51, 153, 0.5); /* น้ำเงินเข้ม */
+    }
+}
+@keyframes glowText {
+    0% {
+        text-shadow: 2px 2px 8px rgba(255, 165, 0, 0.6);
+    }
+    100% {
+        text-shadow: 4px 4px 12px rgba(255, 215, 0, 0.9);
+    }
+}
+@keyframes popUp {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    80% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.animate-card {
+    animation: popUp 0.3s ease-out;
+}
+
+
+.btn-add:hover {
+    background: linear-gradient(90deg, #218838, #388e3c);
+    transform: scale(1.2);
+    box-shadow: 0 6px 15px rgba(40, 167, 69, 0.7);
+}
+.btn-small {
+                padding: 8px 15px;
+                background-color: #ececec;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 0.9rem;
+                cursor: pointer;
+                transition: transform 0.2s ease, background-color 0.3s;
+                animation: waveShadow 3s infinite ease-in-out alternate;
+            }
+
+            .btn-small:hover {
+                background-color: #81bde6;
+                transform: scale(1.2);
+            }
+            .control-container {
+                display: flex;
+                justify-content: flex-end;
+                padding-right: 400px;
+            }
+        
+
+.card-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;              /* ระยะห่างระหว่างปุ่ม */
+}
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  margin-top: 30px;
+}
+
+.slider-label {
+  font-size: 18px;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.slider-value {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Enhance the slider appearance */
+#brightnessSlider {
+  width: 200px;
+  height: 25px;
+  -webkit-appearance: none;
+  background: #69a2ec;
+  border-radius: 12px;
+  outline: none;
+}
+
+/* Style the slider thumb */
+#brightnessSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: hsl(0, 0%, 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#brightnessSlider::-moz-range-thumb {
+  width: 35px;
+  height: 35px;
+  background: #4CAF50;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+    .gauge-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        
+        }
+        .gauges-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 20px;
+}
+        .gauge {
+            width: 100%;
+            height: 100%;
+            transform: rotate(135deg);
+        }
+        .gauge .bar {
+            fill: none;
+            stroke-width: 13;
+            stroke-linecap: round;
+            stroke: #a7a7c9;
+            transition: stroke-dasharray 0.5s;
+        }
+        .gauge .background {
+            fill: none;
+            stroke: #ddd;
+            stroke-width: 15;
+        }
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+</style>
+</head>
+<body>
+  <header>
+    CONTROL
+    <button class="btn-home" onclick="window.location.href='index.html'">
+      <img src="images/home1.png" alt="" style="width: 25px; height: 22px; vertical-align: middle; margin-right: 0px;">
+    </button>
+  </header>
+  <div class="gauges-wrapper">
+    <div class="gauge-container">
+        <svg class="gauge" viewBox="0 0 100 100">
+            <circle class="background" cx="50" cy="50" r="40"></circle>
+            <circle class="bar" cx="50" cy="50" r="40" stroke-dasharray="0, 251.2"></circle>
+        </svg>
+        <div class="gauge-text" id="lightValue">ค่าแสงตัวที่ 1</div>
+    </div>
+
+    <div class="gauge-container">
+        <svg class="gauge" viewBox="0 0 100 100">
+            <circle class="background" cx="50" cy="50" r="40"></circle>
+            <circle class="bar" cx="50" cy="50" r="40" stroke-dasharray="0, 251.2"></circle>
+        </svg>
+        <div class="gauge-text" id="lightValue2">ค่าแสงตัวที่ 2</div>
+    </div>
+</div>
+
+
+</div>
+  
+
+  <div class="btn-container">
+    <div class="control-container">
+      <button class="btn-small" onclick="addNewCard()">
+        <img src="images/add.png" alt="New" style="width: 25px; height: 25px; vertical-align: middle;">
+      </button>
+      <button class="btn-small btn-remove" onclick="removeLastCards()">
+        <img src="images/remove.png" alt="Remove" style="width: 25px; height: 25px; vertical-align: middle;">
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="control-section">
+      <div class="card">
+        <img src="images/i.png" alt="เปิด">
+        <h2>OPEN</h2>
+        <button class="btn-open" onclick="sendCommand('open')">O</button>
+      </div>
+
+      <div class="card">
+        <img src="images/o.png" alt="ปิด">
+        <h2>CLOSE</h2>
+        <button class="btn-close" onclick="sendCommand('close')">X</button>
+      </div>
+      
+
+      <div class="card">
+        <img src="images/t.png" alt="AUTO MODE">
+        <h2>AUTO MODE</h2>
+        <label class="switch">
+          <input type="checkbox" id="autoToggle" onchange="toggleAutoMode(this.checked)">
+          <span class="slider"></span>
+        </label>
+        <div class="slider-container">
+          <label class="slider-label">Brightness</label>
+          <input type="range" id="brightnessSlider" min="0" max="1000" value="600" step="1" oninput="updateSliderValue(this.value)">
+          
+          <div class="slider-value">   <span id="sliderValue">600</span></div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- แถบด้านล่าง -->
+  <div class="footer">
+    <div class="marquee-container">
+      <span class="marquee-text">
+        <img src="https://scontent-atl3-3.xx.fbcdn.net/v/t1.15752-9/462557076_1121465172652763_3813178733494173844_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=0024fc&_nc_ohc=pRrWFUrp6J0Q7kNvgHuHLbN&_nc_oc=AdhrGOcoqJe_mhnKkAJ7yCSP5LkazJdjvDJ_6HX0POvTR38o-qEoqHv8fFR2xBtjZdTH-FJyxx7mkygniaO1n5SP&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-atl3-3.xx&oh=03_Q7cD1gFNpXiWQgcwQQDTq74uYgrBF7eC12hw7HJtlYxYXRS_UQ&oe=67D51D43" alt="" style="width: 30px; height: 30px; vertical-align: middle; mimargin-right: 0px;">
+        ให้สายแนนเพิ่นจ่องน้าว
+        สองเฮาใส่กันแหน่เด้อ
+        ซาตินี้เฮาได้พบเจอ
+        แล้วกะบ่อยากจากจรไปไส
+        ให้สายแนนเพิ่นซูค้ำ ล่ำแยง
+        ฮักแพงกันตลอดไป
+        ขอผลาบุญปั้นแต่งให้
+        เป็นคู่กันไปตลอดชีวิต
+        <img src="https://scontent-atl3-3.xx.fbcdn.net/v/t1.15752-9/462557076_1121465172652763_3813178733494173844_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=0024fc&_nc_ohc=pRrWFUrp6J0Q7kNvgHuHLbN&_nc_oc=AdhrGOcoqJe_mhnKkAJ7yCSP5LkazJdjvDJ_6HX0POvTR38o-qEoqHv8fFR2xBtjZdTH-FJyxx7mkygniaO1n5SP&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-atl3-3.xx&oh=03_Q7cD1gFNpXiWQgcwQQDTq74uYgrBF7eC12hw7HJtlYxYXRS_UQ&oe=67D51D43" alt="" style="width: 30px; height: 30px; vertical-align: middle; mimargin-right: 0px;">
+      </span>
+    </div>
+  </div>
+
+  <script>
+      const firebaseConfig = {
+            apiKey: "AIzaSyCjoxICpXE7hnz4NR-KbymGDdpzo_Ocwdg",
+            authDomain: "curtian-5e101.firebaseapp.com",
+            databaseURL: "https://curtian-5e101-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "curtian-5e101",
+            storageBucket: "curtian-5e101.firebasestorage.app",
+            messagingSenderId: "243439635850",
+            appId: "1:243439635850:web:2942e5dc2149359fa7cc73",
+            measurementId: "G-7ZCMSR37W3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        function sendCommand(command) {
+    database.ref('commands').set({
+        action: command,
+        timestamp: Date.now()
+    })
+    .then(() => showToast(`ส่งคำสั่ง ${command} สำเร็จ`))
+    .catch(error => showToast('Error: ' + error.message));
+}
+ // ตัวแปรเพื่อติดตามสถานะของรีเลย์
+
+ let lastLightState = null;
+let lastActionTaken = false;
+
+function checkLightIntensity() {
+    if (!document.getElementById('autoToggle').checked) {
+        lastActionTaken = false;
+        return;
+    }
+    
+    const threshold = parseInt(document.getElementById('brightnessSlider').value);
+    
+    fetch('http://localhost/phaman/control.php?action=get_light_intensity')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const intensity = parseInt(data.intensity);
+                
+                // แก้ไขเงื่อนไขและเพิ่ม console.log เพื่อดีบัก
+                console.log(`ค่าแสง: ${intensity}, ค่าที่ตั้ง: ${threshold}`);
+                
+                if (intensity > threshold && lastLightState !== 'high') {
+                    fetch(`http://localhost/phaman/control.php?action=open`);  // สั่งเปิดรีเลย์ 1
+                    lastLightState = 'high';
+                    console.log('เปิดรีเลย์ 1: แสงมาก');
+                }
+                else if (intensity <= threshold && lastLightState !== 'low') {
+                    fetch(`http://localhost/phaman/control.php?action=close`);  // สั่งเปิดรีเลย์ 2
+                    lastLightState = 'low';
+                    console.log('เปิดรีเลย์ 2: แสงน้อย');
+                }
+            }
+        });
+}
+setInterval(checkLightIntensity, 1000);
+document.getElementById('autoToggle').addEventListener('change', function() {
+    if (!this.checked) {
+        lastActionTaken = false;
+        lastLightState = null;
+    }
+});
+
+
+
+   // ฟังก์ชันอัปเดตค่าความสว่าง LDR และแสดงใน Gauge
+   function fetchLightIntensity() {
+    fetch('http://localhost/phaman/control.php?action=get_light_intensity')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const lightIntensity = data.intensity;
+                updateGauge(lightIntensity); // อัปเดตแถบ Gauge
+                document.getElementById('lightValue').textContent = `${lightIntensity} lux`; // แสดงค่าบนหน้าเว็บ
+            } else {
+                document.getElementById('lightValue').textContent = "เกิดข้อผิดพลาดในการดึงค่าความเข้มของแสง";
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching light intensity:', error);
+            document.getElementById('lightValue').textContent = "เกิดข้อผิดพลาด";
+        });
+}
+
+// เรียกฟังก์ชัน fetchLightIntensity ทุก 1 วินาที
+setInterval(fetchLightIntensity, 1000);
+
+
+
+
+// อัปเดตแถบ Gauge ด้วยค่าความสว่าง
+function updateGauge(value) {
+    const bar = document.querySelector('.gauge .bar'); // แถบ Gauge
+    const circumference = 2 * Math.PI * 40; // เส้นรอบวงของวงกลม
+    const offset = circumference - (value / 1000) * circumference; // คำนวณระยะที่แสดงสี
+    bar.style.strokeDasharray = `${circumference - offset}, ${offset}`; // อัปเดตแถบ
+}
+
+// เรียกฟังก์ชัน fetchLightIntensity ทุก 1 วินาที
+setInterval(fetchLightIntensity, 1000);
+
+    const deviceIP = "http://172.20.10.3/phaman/control.php"; // แก้ไขให้ตรงกับเซิร์ฟเวอร์
+
+
+
+    function addNewCards() {
+      const controlSection = document.querySelector('.control-section');
+      for (let i = 0; i < 3; i++) {
+        const card = document.createElement('div');
+        controlSection.appendChild(card);
+      }
+    }
+
+    function removeLastCards() {
+      const controlSection = document.querySelector('.control-section');
+      const cards = controlSection.querySelectorAll('.card');
+      let count = 0;
+      for (let i = cards.length - 1; i >= 0 && count < 3; i--) {
+        if (!cards[i].classList.contains('default-card')) {
+          cards[i].remove();
+          count++;
+        }
+      }
+    }
+
+    function addNewCard() {
+      const controlSection = document.querySelector('.control-section');
+      const newCard = document.createElement('div');
+      newCard.classList.add('card-container', 'animate-card');
+      newCard.innerHTML = `
+        <div class="card">
+          <img src="images/i.png" alt="OPEN">
+          <h2>OPEN</h2>
+          <button class="btn-open" onclick="sendCommand('open')">O</button>
+        </div>
+        <div class="card">
+          <img src="images/o.png" alt="CLOSE">
+          <h2>CLOSE</h2>
+          <button class="btn-close" onclick="sendCommand('close')">X</button>
+        </div>
+        <div class="card">
+          <img src="images/t.png" alt="AUTO MODE">
+          <h2>AUTO MODE</h2>
+          <label class="switch">
+            <input type="checkbox" onchange="sendCommand('auto_mode', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      `;
+      controlSection.appendChild(newCard);
+    }
+
+    function sendCommand(command) {
+      console.log(`Command: ${command}`);
+      fetch(`${deviceIP}?action=${command}`)
+        .then(response => response.json())
+        .then(data => showToast(data.message))
+        .catch(error => showToast('Error: ' + error));
+    }
+
+    // ส่งคำสั่งความสว่างไปยัง ESP8266
+    function updateSliderValue(value) {
+    // อัพเดทค่าที่แสดงบน UI
+    document.getElementById('sliderValue').textContent = value;
+    
+    // ส่งค่าไปอัพเดท brightness ในระบบ
+    fetch(`http://localhost/phaman/control.php?action=set_brightness&value=${value}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // เรียกดูสถานะใหม่เพื่ออัพเดทค่าในระบบ
+                fetch('http://localhost/phaman/control.php?action=status')
+                    .then(response => response.json())
+                    .then(statusData => {
+                        console.log('Updated status:', statusData);
+                    });
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+
+
+let autoModeIntervalId = null;
+function toggleAutoMode(isEnabled) {
+    const action = isEnabled ? 'auto_on' : 'auto_off';
+    
+    // เพิ่ม console.log เพื่อดีบัก
+    console.log(`กำลังเปลี่ยนโหมดอัตโนมัติเป็น: ${action}`);
+    
+    fetch(`http://localhost/phaman/control.php?action=${action}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+                console.log(`เปลี่ยนโหมดสำเร็จ: ${data.message}`);
+                
+                if (isEnabled) {
+                    checkLightIntensity(); // ตรวจสอบทันที
+                    if (!autoModeIntervalId) {
+                        autoModeIntervalId = setInterval(checkLightIntensity, 1000);
+                    }
+                } else {
+                    if (autoModeIntervalId) {
+                        clearInterval(autoModeIntervalId);
+                        autoModeIntervalId = null;
+                    }
+                    // ปิดรีเลย์ทั้งหมด
+                    fetch('http://localhost/phaman/control.php?action=close');
+                }
+            }
+        });
+}
+
+function loadInitialStatus() {
+    fetch(`${deviceIP}?action=status`)
+        .then(response => response.json())
+        .then(data => {
+            const autoToggle = document.getElementById('autoToggle');
+            autoToggle.checked = data.autoMode === "on";
+            
+            // อัปเดตค่า brightness
+            if (data.brightness) {
+                const brightnessSlider = document.getElementById('brightnessSlider');
+                brightnessSlider.value = data.brightness;
+                document.getElementById('sliderValue').textContent = data.brightness;
+            }
+            
+            // เริ่ม Auto Mode ถ้าเปิดอยู่
+            if (data.autoMode === "on") {
+                toggleAutoMode(true);
+            }
+        })
+        .catch(error => showToast('Error: ' + error));
+}
+
+
+    function sendCommand(action) {
+    fetch(`http://localhost/phaman/control.php?action=${action}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+            } else {
+                showToast('Error: ' + data.message);
+            }
+        })
+        .catch(error => showToast('Error: ' + error));
+}
+    // แสดงผลการตอบกลับจากเซิร์ฟเวอร์
+    function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.style.display = 'block';
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
+}
+
+
+
+    // โหลดสถานะของ Auto Mode
+    function loadInitialStatus() {
+      fetch(`${deviceIP}?action=status`)
+        .then(response => response.json())
+        .then(data => {
+          const autoToggle = document.getElementById('autoToggle');
+          autoToggle.checked = data.autoMode === "on";
+        })
+        .catch(error => showToast('Error: ' + error));
+    }
+  
+
+    // โหลดสถานะเมื่อหน้าเว็บโหลดเสร็จ
+    window.onload = loadInitialStatus;
+  </script>
+</body>
+
+    </html> 

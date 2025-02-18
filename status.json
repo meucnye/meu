@@ -1,0 +1,7 @@
+{
+    "door": "closed",
+    "autoMode": "off",
+    "brightness": 978,
+    "colorTemperature": 4000,
+    "ldrThreshold": 50
+}
